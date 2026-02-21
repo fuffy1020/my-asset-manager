@@ -40,6 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# NOTE: data/ is intentionally NOT ignored.
-# data/holdings.json, data/cash.json, data/transactions.json, data/price_meta.json
-# are personal (non-secret) asset data tracked in Git for portability across devices.
+# NOTE: data/ is intentionally NOT ignored, EXCEPT transactions.json (personal trade history).
+# data/holdings.json, data/cash.json, data/price_meta.json are tracked for portability.
+# data/transactions.json is private and excluded.
+data/transactions.json

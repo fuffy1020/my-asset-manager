@@ -5,7 +5,10 @@ import type { Holding, PriceMeta } from '@/app/lib/types';
 
 const HOLDINGS_FILE = path.join(process.cwd(), 'data', 'holdings.json');
 const META_FILE = path.join(process.cwd(), 'data', 'price_meta.json');
-const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 小時
+
+// TWSE（上市）& TPEX（上櫃）API
+const TWSE_URL = 'https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL';
+const TPEX_URL = 'https://www.tpex.org.tw/openapi/v1/tpex_mainboard_daily_close_quotes';
 
 async function readMeta(): Promise<PriceMeta> {
   try {
@@ -33,62 +36,89 @@ async function writeHoldings(holdings: Holding[]): Promise<void> {
   await fs.writeFile(HOLDINGS_FILE, JSON.stringify(holdings, null, 2), 'utf-8');
 }
 
-// 將 ticker 轉為 Yahoo Finance 格式
-function toYahooSymbol(ticker: string, category: string): string {
-  if (category === 'tw_stock') {
-    return `${ticker}.TW`;
+// 抓台股收盤價：先查 TWSE（上市），查不到再查 TPEX（上櫃）
+async function fetchTwPriceMap(): Promise<Map<string, number>> {
+  const priceMap = new Map<string, number>();
+
+  // TWSE 上市
+  try {
+    const res = await fetch(TWSE_URL, { cache: 'no-store' });
+    const data = await res.json() as Array<{ Code: string; ClosingPrice: string }>;
+    for (const row of data) {
+      const price = parseFloat(row.ClosingPrice.replace(/,/g, ''));
+      if (!isNaN(price)) priceMap.set(row.Code, price);
+    }
+  } catch (e) {
+    console.error('TWSE fetch error:', e);
   }
-  return ticker;
+
+  // TPEX 上櫃（補充 TWSE 沒有的）
+  try {
+    const res = await fetch(TPEX_URL, { cache: 'no-store' });
+    const data = await res.json() as Array<{ SecuritiesCompanyCode: string; Close: string }>;
+    for (const row of data) {
+      if (!priceMap.has(row.SecuritiesCompanyCode)) {
+        const price = parseFloat(row.Close.replace(/,/g, ''));
+        if (!isNaN(price)) priceMap.set(row.SecuritiesCompanyCode, price);
+      }
+    }
+  } catch (e) {
+    console.error('TPEX fetch error:', e);
+  }
+
+  return priceMap;
 }
 
 export async function GET() {
   try {
-    const meta = await readMeta();
-
-    // 檢查 cooldown
-    if (meta.lastFetchedAt) {
-      const lastFetched = new Date(meta.lastFetchedAt).getTime();
-      const now = Date.now();
-      if (now - lastFetched < COOLDOWN_MS) {
-        const hoursAgo = Math.round((now - lastFetched) / (60 * 60 * 1000) * 10) / 10;
-        return NextResponse.json({
-          skipped: true,
-          lastFetchedAt: meta.lastFetchedAt,
-          message: `距離上次更新僅 ${hoursAgo} 小時，未滿 24 小時，跳過更新`,
-        });
-      }
-    }
-
-    // yahoo-finance2 v3: 需要 class 實例化
-    const YahooFinance = (await import('yahoo-finance2')).default;
-    const yf = new YahooFinance();
-
     const holdings = await readHoldings();
     if (holdings.length === 0) {
       return NextResponse.json({ skipped: true, message: '沒有持股資料' });
     }
 
+    const twHoldings = holdings.filter(h => h.category === 'tw_stock');
+    const usHoldings = holdings.filter(h => h.category === 'us_stock');
+
     const updated: { ticker: string; oldPrice: number; newPrice: number }[] = [];
     const errors: { ticker: string; error: string }[] = [];
 
-    // 逐一抓取價格
-    for (const holding of holdings) {
-      const symbol = toYahooSymbol(holding.ticker, holding.category);
-      try {
-        const quote = await yf.quote(symbol);
-        const price = (quote as Record<string, unknown>)?.regularMarketPrice;
-        if (price && typeof price === 'number') {
+    // ---- 台股：一次抓 TWSE + TPEX 全量，再 lookup ----
+    if (twHoldings.length > 0) {
+      const twPriceMap = await fetchTwPriceMap();
+      for (const holding of twHoldings) {
+        const price = twPriceMap.get(holding.ticker);
+        if (price !== undefined) {
           const oldPrice = holding.currentPrice;
           holding.currentPrice = price;
           updated.push({ ticker: holding.ticker, oldPrice, newPrice: price });
         } else {
-          errors.push({ ticker: holding.ticker, error: '無法取得價格資料' });
+          errors.push({ ticker: holding.ticker, error: '查無收盤價（可能是興櫃或未上市）' });
         }
-      } catch (err) {
-        errors.push({
-          ticker: holding.ticker,
-          error: err instanceof Error ? err.message : '未知錯誤',
-        });
+      }
+    }
+
+    // ---- 美股：Yahoo Finance ----
+    if (usHoldings.length > 0) {
+      const YahooFinance = (await import('yahoo-finance2')).default;
+      const yf = new YahooFinance();
+
+      for (const holding of usHoldings) {
+        try {
+          const quote = await yf.quote(holding.ticker);
+          const price = (quote as Record<string, unknown>)?.regularMarketPrice;
+          if (price && typeof price === 'number') {
+            const oldPrice = holding.currentPrice;
+            holding.currentPrice = price;
+            updated.push({ ticker: holding.ticker, oldPrice, newPrice: price });
+          } else {
+            errors.push({ ticker: holding.ticker, error: '無法取得價格資料' });
+          }
+        } catch (err) {
+          errors.push({
+            ticker: holding.ticker,
+            error: err instanceof Error ? err.message : '未知錯誤',
+          });
+        }
       }
     }
 
@@ -97,7 +127,6 @@ export async function GET() {
       await writeHoldings(holdings);
     }
 
-    // 只有在至少一檔成功時才更新 lastFetchedAt
     const now = new Date().toISOString();
     if (updated.length > 0) {
       await writeMeta({ lastFetchedAt: now });
@@ -105,7 +134,7 @@ export async function GET() {
 
     return NextResponse.json({
       skipped: false,
-      lastFetchedAt: updated.length > 0 ? now : meta.lastFetchedAt,
+      lastFetchedAt: updated.length > 0 ? now : null,
       updated,
       errors: errors.length > 0 ? errors : undefined,
       message: `已更新 ${updated.length} 檔股票價格${errors.length > 0 ? ` (${errors.length} 檔失敗)` : ''}`,

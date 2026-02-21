@@ -14,14 +14,6 @@ const EX_RATE = 31.5;
 const DONUT_COLORS_TW = ['#10b981', '#06b6d4', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'];
 const DONUT_COLORS_US = ['#0066cc', '#60a5fa', '#34d399', '#86efac', '#a78bfa', '#f472b6'];
 
-const mockHistoryData = [
-  { date: '2023-01', tw_stock: 500000, us_stock: 10000, cash: 200000 },
-  { date: '2023-06', tw_stock: 550000, us_stock: 12000, cash: 150000 },
-  { date: '2023-12', tw_stock: 600000, us_stock: 15000, cash: 180000 },
-  { date: '2024-06', tw_stock: 800000, us_stock: 22000, cash: 100000 },
-  { date: '2024-12', tw_stock: 1200000, us_stock: 35000, cash: 150000 },
-];
-
 // --- Helpers ---
 function computeHoldingStats(holdings: Holding[]) {
   let totalValue = 0;
@@ -103,7 +95,7 @@ export default function AssetManager() {
         });
       } else {
         setPriceStatus({
-          text: `✅ ${data.message}${data.errors?.length ? ` (${data.errors.length} 檔失敗)` : ''}`,
+          text: `✅ ${data.message}`,
           type: data.errors?.length ? 'error' : 'success',
         });
         // 重新載入持股以反映新價格
@@ -116,16 +108,27 @@ export default function AssetManager() {
     }
   }, [fetchHoldings]);
 
-  // --- 初始載入 ---
+  // --- 載入上次更新時間 ---
+  const fetchPriceMeta = useCallback(async () => {
+    try {
+      const res = await fetch('/api/prices/refresh-status');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.lastFetchedAt) {
+        setPriceStatus({ text: `上次更新：${timeAgo(data.lastFetchedAt)}`, type: 'info' });
+      }
+    } catch { /* silent */ }
+  }, []);
+
+  // --- 初始載入（不自動爬蟲）---
   useEffect(() => {
     async function init() {
       await Promise.all([fetchHoldings(), fetchCash()]);
       setLoading(false);
-      // 載入完成後自動嘗試更新價格
-      refreshPrices();
+      fetchPriceMeta();
     }
     init();
-  }, [fetchHoldings, fetchCash, refreshPrices]);
+  }, [fetchHoldings, fetchCash, fetchPriceMeta]);
 
   // --- 計算 ---
   const twHoldings = useMemo(() => holdings.filter(h => h.category === 'tw_stock'), [holdings]);
@@ -153,19 +156,20 @@ export default function AssetManager() {
   const totalAssetTWD = twStats.totalValue + usStats.totalValue * EX_RATE + totalCashInTWD;
   const totalAssetDisplay = displayCurrency === 'TWD' ? totalAssetTWD : totalAssetTWD / EX_RATE;
 
-  // --- 歷史資料幣別換算 ---
-  const formattedHistory = mockHistoryData.map(data => {
-    const usStockInTWD = data.us_stock * EX_RATE;
-    const totalTWD = data.tw_stock + usStockInTWD + data.cash;
-    if (displayCurrency === 'TWD') {
-      return { ...data, us_stock: usStockInTWD, total: totalTWD };
-    } else {
-      return {
-        date: data.date, tw_stock: data.tw_stock / EX_RATE,
-        us_stock: data.us_stock, cash: data.cash / EX_RATE, total: totalTWD / EX_RATE,
-      };
-    }
-  });
+  // --- 歷史水位：用真實資料產生今日快照點 ---
+  const todayLabel = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit' });
+  const chartData = useMemo(() => {
+    const twValueTWD = twStats.totalValue;           // 台股市值（TWD）
+    const usValueTWD = usStats.totalValue * EX_RATE; // 美股市值換算 TWD
+    const cashValueTWD = cashTWD + cashUSD * EX_RATE;
+    const totalTWD = twValueTWD + usValueTWD + cashValueTWD;
+
+    const point = displayCurrency === 'TWD'
+      ? { date: todayLabel, total: totalTWD }
+      : { date: todayLabel, total: totalTWD / EX_RATE };
+
+    return [point];
+  }, [twStats.totalValue, usStats.totalValue, cashTWD, cashUSD, displayCurrency, todayLabel]);
 
   // --- 記錄交易 ---
   const logTransaction = async (txn: {
@@ -330,7 +334,7 @@ export default function AssetManager() {
           <h2 className="text-xl font-semibold mb-6">資產歷史水位表 ({displayCurrency})</h2>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={formattedHistory}>
+              <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
@@ -342,7 +346,7 @@ export default function AssetManager() {
                 <YAxis stroke="#94a3b8" tickFormatter={(val) => `${val / 1000}k`} />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }}
-                  formatter={(value: number) => [`$${value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, '總資產']}
+                  formatter={(value: number | undefined) => [`$${(value ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, '總資產']}
                 />
                 <Area type="monotone" dataKey="total" stroke="#10b981" fillOpacity={1} fill="url(#colorTotal)" />
               </AreaChart>
@@ -361,13 +365,21 @@ export default function AssetManager() {
             {/* 台股 & 美股 Donut Charts */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <StockDonutChart
-                title="台股" currencyLabel="TWD" holdings={twPieData}
+                title="台股"
+                originalCurrency="TWD"
+                displayCurrency={displayCurrency}
+                exRate={EX_RATE}
+                holdings={twPieData}
                 totalValue={twStats.totalValue} totalCost={twStats.totalCost}
                 totalProfit={twStats.totalProfit} profitPercent={twStats.profitPercent}
                 onDelete={handleDeleteHolding}
               />
               <StockDonutChart
-                title="美股" currencyLabel="USD" holdings={usPieData}
+                title="美股"
+                originalCurrency="USD"
+                displayCurrency={displayCurrency}
+                exRate={EX_RATE}
+                holdings={usPieData}
                 totalValue={usStats.totalValue} totalCost={usStats.totalCost}
                 totalProfit={usStats.totalProfit} profitPercent={usStats.profitPercent}
                 onDelete={handleDeleteHolding}
@@ -485,10 +497,14 @@ export default function AssetManager() {
               <option value="tw_stock">台股</option>
               <option value="us_stock">美股</option>
             </select>
-            <input type="text" placeholder="代號 (如: 2330)" required value={tradeForm.ticker}
+            <input type="text"
+              placeholder={tradeForm.category === 'us_stock' ? '代號 (e.g. AAPL)' : '代號 (如: 2330)'}
+              required value={tradeForm.ticker}
               className="bg-slate-700 rounded-lg p-3 text-white border border-slate-600 focus:border-emerald-500 focus:outline-none"
               onChange={e => setTradeForm({ ...tradeForm, ticker: e.target.value })} />
-            <input type="text" placeholder="名稱 (如: 台積電)" required value={tradeForm.name}
+            <input type="text"
+              placeholder={tradeForm.category === 'us_stock' ? '名稱 (e.g. Apple)' : '名稱 (如: 台積電)'}
+              required value={tradeForm.name}
               className="bg-slate-700 rounded-lg p-3 text-white border border-slate-600 focus:border-emerald-500 focus:outline-none"
               onChange={e => setTradeForm({ ...tradeForm, name: e.target.value })} />
             <input type="number" step="0.01" placeholder="成本價" required value={tradeForm.price}
@@ -511,7 +527,7 @@ export default function AssetManager() {
       </div>
 
       {/* 交易紀錄面板 */}
-      <TransactionHistory isOpen={historyOpen} onClose={() => setHistoryOpen(false)} />
+      <TransactionHistory isOpen={historyOpen} onClose={() => setHistoryOpen(false)} displayCurrency={displayCurrency} />
     </div>
   );
 }

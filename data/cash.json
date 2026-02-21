@@ -1,4 +1,8 @@
 [
-  { "id": "init-twd-1", "bankName": "台新銀行", "amount": 200000, "currency": "TWD" },
-  { "id": "init-usd-1", "bankName": "Firstrade", "amount": 5000, "currency": "USD" }
+  {
+    "id": "cash-1771683057028-349dj",
+    "bankName": "國泰",
+    "amount": 12963,
+    "currency": "TWD"
+  }
 ]

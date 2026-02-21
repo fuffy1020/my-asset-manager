@@ -7,13 +7,15 @@ import { Trash2 } from 'lucide-react';
 interface HoldingData {
   ticker: string;
   name: string;
-  value: number;
+  value: number;        // 原始幣別的市價
   color: string;
 }
 
 interface StockDonutChartProps {
   title: string;
-  currencyLabel: string;
+  originalCurrency: 'TWD' | 'USD'; // 資料原始幣別
+  displayCurrency: 'TWD' | 'USD';  // 目前顯示幣別
+  exRate: number;                   // 1 USD = exRate TWD
   holdings: HoldingData[];
   totalValue: number;
   totalCost: number;
@@ -24,7 +26,9 @@ interface StockDonutChartProps {
 
 export default function StockDonutChart({
   title,
-  currencyLabel,
+  originalCurrency,
+  displayCurrency,
+  exRate,
   holdings,
   totalValue,
   totalCost,
@@ -33,6 +37,17 @@ export default function StockDonutChart({
   onDelete,
 }: StockDonutChartProps) {
   const totalForPercent = holdings.reduce((sum, h) => sum + h.value, 0);
+
+  // 如果顯示幣別與原始幣別不同，進行換算
+  const factor =
+    originalCurrency === displayCurrency ? 1 :
+    originalCurrency === 'USD' && displayCurrency === 'TWD' ? exRate :
+    1 / exRate;
+
+  const displayValue = totalValue * factor;
+  const displayCost  = totalCost  * factor;
+  const displayProfit = totalProfit * factor;
+  const currencySymbol = displayCurrency === 'TWD' ? 'NT$' : 'US$';
 
   return (
     <div className="bg-slate-800 rounded-xl shadow-lg overflow-hidden">
@@ -69,9 +84,9 @@ export default function StockDonutChart({
           </ResponsiveContainer>
           {/* Center label */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-xs text-slate-400 font-medium">{currencyLabel}</span>
+            <span className="text-xs text-slate-400 font-medium">{displayCurrency}</span>
             <span className="text-xl font-bold text-white leading-tight">
-              {totalValue.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
+              {displayValue.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
             </span>
             <span
               className={`text-sm font-semibold ${
@@ -84,52 +99,59 @@ export default function StockDonutChart({
           </div>
         </div>
 
-        {/* Legend */}
-        <div className="flex flex-col gap-2.5 flex-1 min-w-0">
-          {holdings.map((h, i) => {
-            const pct = totalForPercent > 0 ? ((h.value / totalForPercent) * 100).toFixed(1) : '0.0';
-            return (
-              <div key={i} className="flex items-center gap-3 group">
-                <span
-                  className="inline-block w-3 h-3 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: h.color }}
-                />
-                <span className="text-sm text-slate-200 font-medium tabular-nums">
-                  {pct}%
-                </span>
-                <span className="text-sm text-slate-300 truncate flex-1">{h.name}</span>
-                {onDelete && (
-                  <button
-                    onClick={() => onDelete(h.ticker)}
-                    className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 transition-all p-0.5"
-                    title={`賣出 ${h.name}`}
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                )}
-              </div>
-            );
-          })}
+        {/* Legend — sorted by % desc, aligned with grid */}
+        <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+          {[...holdings]
+            .sort((a, b) => b.value - a.value)
+            .map((h, i) => {
+              const pct = totalForPercent > 0 ? ((h.value / totalForPercent) * 100).toFixed(1) : '0.0';
+              return (
+                <div key={i} className="grid items-center gap-x-2 group"
+                  style={{ gridTemplateColumns: '12px 44px 1fr auto' }}>
+                  {/* dot */}
+                  <span
+                    className="inline-block w-3 h-3 rounded-full"
+                    style={{ backgroundColor: h.color }}
+                  />
+                  {/* pct — right-aligned in fixed column */}
+                  <span className="text-sm text-slate-200 font-medium tabular-nums text-right">
+                    {pct}%
+                  </span>
+                  {/* name */}
+                  <span className="text-sm text-slate-300 truncate">{h.name}</span>
+                  {/* delete */}
+                  {onDelete && (
+                    <button
+                      onClick={() => onDelete(h.ticker)}
+                      className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 transition-all p-0.5"
+                      title={`賣出 ${h.name}`}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
         </div>
       </div>
 
       {/* Footer: Cost & Profit */}
       <div className="border-t border-slate-700 grid grid-cols-2 divide-x divide-slate-700">
         <div className="px-5 py-4">
-          <p className="text-xs text-slate-400 mb-1">總成本</p>
+          <p className="text-xs text-slate-400 mb-1">總成本 ({displayCurrency})</p>
           <p className="text-lg font-bold text-white tabular-nums">
-            {totalCost.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
+            {currencySymbol} {displayCost.toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </p>
         </div>
         <div className="px-5 py-4">
-          <p className="text-xs text-slate-400 mb-1">帳面獲利</p>
+          <p className="text-xs text-slate-400 mb-1">帳面獲利 ({displayCurrency})</p>
           <p
             className={`text-lg font-bold tabular-nums ${
-              totalProfit >= 0 ? 'text-emerald-400' : 'text-red-400'
+              displayProfit >= 0 ? 'text-emerald-400' : 'text-red-400'
             }`}
           >
-            {totalProfit >= 0 ? '+' : ''}
-            {totalProfit.toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
+            {displayProfit >= 0 ? '+' : ''}
+            {currencySymbol} {Math.abs(displayProfit).toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </p>
         </div>
       </div>

@@ -1,101 +1,128 @@
 [
   {
-    "ticker": "2330",
-    "name": "台積電",
-    "category": "tw_stock",
-    "shares": 5,
-    "avgCost": 580,
-    "currentPrice": 1915,
-    "currency": "TWD"
-  },
-  {
-    "ticker": "2454",
-    "name": "聯發科",
-    "category": "tw_stock",
-    "shares": 3,
-    "avgCost": 900,
-    "currentPrice": 1855,
-    "currency": "TWD"
-  },
-  {
-    "ticker": "2317",
-    "name": "鴻海",
-    "category": "tw_stock",
-    "shares": 10,
-    "avgCost": 105,
-    "currentPrice": 227,
-    "currency": "TWD"
-  },
-  {
-    "ticker": "2881",
-    "name": "富邦金",
+    "ticker": "2308",
+    "name": "台達電",
     "category": "tw_stock",
     "shares": 20,
-    "avgCost": 68,
-    "currentPrice": 95.2,
+    "avgCost": 1057.5,
+    "currentPrice": 1260,
     "currency": "TWD"
   },
   {
-    "ticker": "0050",
-    "name": "元大台灣50",
+    "ticker": "2337",
+    "name": "旺宏",
     "category": "tw_stock",
-    "shares": 8,
-    "avgCost": 130,
-    "currentPrice": 77.2,
+    "shares": 200,
+    "avgCost": 91.53,
+    "currentPrice": 98.5,
     "currency": "TWD"
   },
   {
-    "ticker": "AAPL",
-    "name": "Apple",
-    "category": "us_stock",
+    "ticker": "2383",
+    "name": "台光電",
+    "category": "tw_stock",
+    "shares": 5,
+    "avgCost": 2050,
+    "currentPrice": 2195,
+    "currency": "TWD"
+  },
+  {
+    "ticker": "3037",
+    "name": "欣興",
+    "category": "tw_stock",
+    "shares": 30,
+    "avgCost": 383,
+    "currentPrice": 369,
+    "currency": "TWD"
+  },
+  {
+    "ticker": "3105",
+    "name": "穩懋",
+    "category": "tw_stock",
+    "shares": 100,
+    "avgCost": 237.5,
+    "currentPrice": 246,
+    "currency": "TWD"
+  },
+  {
+    "ticker": "3189",
+    "name": "景碩",
+    "category": "tw_stock",
+    "shares": 50,
+    "avgCost": 259.5,
+    "currentPrice": 265.5,
+    "currency": "TWD"
+  },
+  {
+    "ticker": "3324",
+    "name": "雙鴻",
+    "category": "tw_stock",
     "shares": 10,
-    "avgCost": 165,
-    "currentPrice": 264.58,
+    "avgCost": 1095,
+    "currentPrice": 1065,
+    "currency": "TWD"
+  },
+  {
+    "ticker": "5347",
+    "name": "世界",
+    "category": "tw_stock",
+    "shares": 200,
+    "avgCost": 138.5,
+    "currentPrice": 126,
+    "currency": "TWD"
+  },
+  {
+    "ticker": "AVGO",
+    "name": "Broadcom",
+    "category": "us_stock",
+    "shares": 5,
+    "avgCost": 370.846,
+    "currentPrice": 332.65,
+    "currency": "USD"
+  },
+  {
+    "ticker": "COHR",
+    "name": "Coherent",
+    "category": "us_stock",
+    "shares": 2,
+    "avgCost": 206.88,
+    "currentPrice": 248.18,
+    "currency": "USD"
+  },
+  {
+    "ticker": "GLW",
+    "name": "Corning",
+    "category": "us_stock",
+    "shares": 5,
+    "avgCost": 122.826,
+    "currentPrice": 139.51,
+    "currency": "USD"
+  },
+  {
+    "ticker": "LITE",
+    "name": "Lumentum",
+    "category": "us_stock",
+    "shares": 3,
+    "avgCost": 339.203,
+    "currentPrice": 667.77,
+    "currency": "USD"
+  },
+  {
+    "ticker": "MU",
+    "name": "Micron",
+    "category": "us_stock",
+    "shares": 3,
+    "avgCost": 411.4067,
+    "currentPrice": 428.17,
     "currency": "USD"
   },
   {
     "ticker": "NVDA",
     "name": "Nvidia",
     "category": "us_stock",
-    "shares": 15,
-    "avgCost": 480,
+    "shares": 2,
+    "avgCost": 187.405,
     "currentPrice": 189.82,
     "currency": "USD"
-  },
-  {
-    "ticker": "MSFT",
-    "name": "Microsoft",
-    "category": "us_stock",
-    "shares": 5,
-    "avgCost": 360,
-    "currentPrice": 397.23,
-    "currency": "USD"
-  },
-  {
-    "ticker": "GOOGL",
-    "name": "Alphabet",
-    "category": "us_stock",
-    "shares": 8,
-    "avgCost": 140,
-    "currentPrice": 314.98,
-    "currency": "USD"
-  },
-  {
-    "ticker": "AMZN",
-    "name": "Amazon",
-    "category": "us_stock",
-    "shares": 6,
-    "avgCost": 155,
-    "currentPrice": 210.11,
-    "currency": "USD"
-  },
-  {
-    "ticker": "00502412",
-    "name": "TW50",
-    "category": "tw_stock",
-    "shares": 5,
-    "avgCost": 100120,
-    "currentPrice": 130,
-    "currency": "TWD"
   }
 ]
