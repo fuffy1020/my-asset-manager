@@ -4,9 +4,10 @@ import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import { DollarSign, PlusCircle, Loader2, Wallet, RefreshCw, Trash2, ClipboardList } from 'lucide-react';
+import { DollarSign, PlusCircle, Loader2, Wallet, RefreshCw, Trash2, ClipboardList, LayoutList } from 'lucide-react';
 import StockDonutChart from './components/StockDonutChart';
 import TransactionHistory from './components/TransactionHistory';
+import HoldingsManager from './components/HoldingsManager';
 import type { Holding, Currency, AssetCategory, CashEntry } from './lib/types';
 
 // --- 常數 ---
@@ -50,6 +51,7 @@ export default function AssetManager() {
   const [priceStatus, setPriceStatus] = useState<{ text: string; type: 'info' | 'success' | 'error' } | null>(null);
   const [priceRefreshing, setPriceRefreshing] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [holdingsMgrOpen, setHoldingsMgrOpen] = useState(false);
 
   // 表單狀態
   const [tradeForm, setTradeForm] = useState({
@@ -186,29 +188,6 @@ export default function AssetManager() {
     }
   };
 
-  // --- 刪除持股 ---
-  const handleDeleteHolding = async (ticker: string) => {
-    const holding = holdings.find(h => h.ticker === ticker);
-    const label = holding ? `${holding.ticker} ${holding.name}` : ticker;
-    if (!confirm(`確定要賣出（刪除） ${label} 嗎？`)) return;
-    try {
-      const res = await fetch(`/api/holdings?ticker=${ticker}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('刪除失敗');
-      // 記錄賣出交易
-      if (holding) {
-        await logTransaction({
-          type: 'sell', ticker: holding.ticker, name: holding.name,
-          category: holding.category, shares: holding.shares,
-          price: holding.currentPrice, currency: holding.currency,
-        });
-      }
-      setMessage({ type: 'success', text: `✅ 已賣出 ${label}` });
-      await fetchHoldings();
-    } catch (err) {
-      setMessage({ type: 'error', text: `❌ ${err instanceof Error ? err.message : '刪除失敗'}` });
-    }
-  };
-
   // --- 處理表單提交：股票 ---
   const handleAddTrade = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -293,6 +272,13 @@ export default function AssetManager() {
           </div>
           <div className="flex items-center gap-3">
             <button
+              onClick={() => setHoldingsMgrOpen(true)}
+              className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              <LayoutList size={16} />
+              持股管理
+            </button>
+            <button
               onClick={() => setHistoryOpen(true)}
               className="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
             >
@@ -372,7 +358,6 @@ export default function AssetManager() {
                 holdings={twPieData}
                 totalValue={twStats.totalValue} totalCost={twStats.totalCost}
                 totalProfit={twStats.totalProfit} profitPercent={twStats.profitPercent}
-                onDelete={handleDeleteHolding}
               />
               <StockDonutChart
                 title="美股"
@@ -382,7 +367,6 @@ export default function AssetManager() {
                 holdings={usPieData}
                 totalValue={usStats.totalValue} totalCost={usStats.totalCost}
                 totalProfit={usStats.totalProfit} profitPercent={usStats.profitPercent}
-                onDelete={handleDeleteHolding}
               />
             </div>
 
@@ -528,6 +512,14 @@ export default function AssetManager() {
 
       {/* 交易紀錄面板 */}
       <TransactionHistory isOpen={historyOpen} onClose={() => setHistoryOpen(false)} displayCurrency={displayCurrency} />
+
+      {/* 持股管理面板 */}
+      <HoldingsManager
+        isOpen={holdingsMgrOpen}
+        onClose={() => setHoldingsMgrOpen(false)}
+        displayCurrency={displayCurrency}
+        onRefresh={fetchHoldings}
+      />
     </div>
   );
 }

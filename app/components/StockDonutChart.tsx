@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { Trash2 } from 'lucide-react';
 
 interface HoldingData {
   ticker: string;
@@ -21,7 +20,6 @@ interface StockDonutChartProps {
   totalCost: number;
   totalProfit: number;
   profitPercent: number;
-  onDelete?: (ticker: string) => void;
 }
 
 export default function StockDonutChart({
@@ -34,7 +32,6 @@ export default function StockDonutChart({
   totalCost,
   totalProfit,
   profitPercent,
-  onDelete,
 }: StockDonutChartProps) {
   const totalForPercent = holdings.reduce((sum, h) => sum + h.value, 0);
 
@@ -119,16 +116,6 @@ export default function StockDonutChart({
                   </span>
                   {/* name */}
                   <span className="text-sm text-slate-300 truncate">{h.name}</span>
-                  {/* delete */}
-                  {onDelete && (
-                    <button
-                      onClick={() => onDelete(h.ticker)}
-                      className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 transition-all p-0.5"
-                      title={`賣出 ${h.name}`}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
                 </div>
               );
             })}
