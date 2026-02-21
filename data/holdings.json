@@ -1,0 +1,101 @@
+[
+  {
+    "ticker": "2330",
+    "name": "台積電",
+    "category": "tw_stock",
+    "shares": 5,
+    "avgCost": 580,
+    "currentPrice": 1915,
+    "currency": "TWD"
+  },
+  {
+    "ticker": "2454",
+    "name": "聯發科",
+    "category": "tw_stock",
+    "shares": 3,
+    "avgCost": 900,
+    "currentPrice": 1855,
+    "currency": "TWD"
+  },
+  {
+    "ticker": "2317",
+    "name": "鴻海",
+    "category": "tw_stock",
+    "shares": 10,
+    "avgCost": 105,
+    "currentPrice": 227,
+    "currency": "TWD"
+  },
+  {
+    "ticker": "2881",
+    "name": "富邦金",
+    "category": "tw_stock",
+    "shares": 20,
+    "avgCost": 68,
+    "currentPrice": 95.2,
+    "currency": "TWD"
+  },
+  {
+    "ticker": "0050",
+    "name": "元大台灣50",
+    "category": "tw_stock",
+    "shares": 8,
+    "avgCost": 130,
+    "currentPrice": 77.2,
+    "currency": "TWD"
+  },
+  {
+    "ticker": "AAPL",
+    "name": "Apple",
+    "category": "us_stock",
+    "shares": 10,
+    "avgCost": 165,
+    "currentPrice": 264.58,
+    "currency": "USD"
+  },
+  {
+    "ticker": "NVDA",
+    "name": "Nvidia",
+    "category": "us_stock",
+    "shares": 15,
+    "avgCost": 480,
+    "currentPrice": 189.82,
+    "currency": "USD"
+  },
+  {
+    "ticker": "MSFT",
+    "name": "Microsoft",
+    "category": "us_stock",
+    "shares": 5,
+    "avgCost": 360,
+    "currentPrice": 397.23,
+    "currency": "USD"
+  },
+  {
+    "ticker": "GOOGL",
+    "name": "Alphabet",
+    "category": "us_stock",
+    "shares": 8,
+    "avgCost": 140,
+    "currentPrice": 314.98,
+    "currency": "USD"
+  },
+  {
+    "ticker": "AMZN",
+    "name": "Amazon",
+    "category": "us_stock",
+    "shares": 6,
+    "avgCost": 155,
+    "currentPrice": 210.11,
+    "currency": "USD"
+  },
+  {
+    "ticker": "00502412",
+    "name": "TW50",
+    "category": "tw_stock",
+    "shares": 5,
+    "avgCost": 100120,
+    "currentPrice": 130,
+    "currency": "TWD"
+  }
+]

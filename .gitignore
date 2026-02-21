@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# NOTE: data/ is intentionally NOT ignored.
+# data/holdings.json, data/cash.json, data/transactions.json, data/price_meta.json
+# are personal (non-secret) asset data tracked in Git for portability across devices.

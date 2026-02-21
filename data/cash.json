@@ -1,0 +1,4 @@
+[
+  { "id": "init-twd-1", "bankName": "台新銀行", "amount": 200000, "currency": "TWD" },
+  { "id": "init-usd-1", "bankName": "Firstrade", "amount": 5000, "currency": "USD" }
+]
