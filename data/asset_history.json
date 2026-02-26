@@ -1,0 +1,30 @@
+[
+  {
+    "date": "2026-02-23",
+    "twStockTWD": 145265,
+    "usStockTWD": 206197,
+    "cashTWD": 4307,
+    "totalTWD": 355769
+  },
+  {
+    "date": "2026-02-24",
+    "twStockTWD": 157380,
+    "usStockTWD": 207889,
+    "cashTWD": 4307,
+    "totalTWD": 369576
+  },
+  {
+    "date": "2026-02-25",
+    "twStockTWD": 159880,
+    "usStockTWD": 215705,
+    "cashTWD": 4307,
+    "totalTWD": 379892
+  },
+  {
+    "date": "2026-02-26",
+    "twStockTWD": 161180,
+    "usStockTWD": 215705,
+    "cashTWD": 4307,
+    "totalTWD": 381192
+  }
+]

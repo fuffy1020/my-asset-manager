@@ -8,7 +8,7 @@ import { DollarSign, PlusCircle, Loader2, Wallet, RefreshCw, Trash2, ClipboardLi
 import StockDonutChart from './components/StockDonutChart';
 import TransactionHistory from './components/TransactionHistory';
 import HoldingsManager from './components/HoldingsManager';
-import type { Holding, Currency, AssetCategory, CashEntry } from './lib/types';
+import type { Holding, Currency, AssetCategory, CashEntry, AssetSnapshot } from './lib/types';
 
 // --- 常數 ---
 const EX_RATE = 31.5;
@@ -52,6 +52,7 @@ export default function AssetManager() {
   const [priceRefreshing, setPriceRefreshing] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [holdingsMgrOpen, setHoldingsMgrOpen] = useState(false);
+  const [assetHistory, setAssetHistory] = useState<AssetSnapshot[]>([]);
 
   // 表單狀態
   const [tradeForm, setTradeForm] = useState({
@@ -122,15 +123,24 @@ export default function AssetManager() {
     } catch { /* silent */ }
   }, []);
 
+  // --- 載入資產歷史 ---
+  const fetchAssetHistory = useCallback(async () => {
+    try {
+      const res = await fetch('/api/asset-history');
+      if (!res.ok) return;
+      setAssetHistory(await res.json());
+    } catch { /* silent */ }
+  }, []);
+
   // --- 初始載入（不自動爬蟲）---
   useEffect(() => {
     async function init() {
-      await Promise.all([fetchHoldings(), fetchCash()]);
+      await Promise.all([fetchHoldings(), fetchCash(), fetchAssetHistory()]);
       setLoading(false);
       fetchPriceMeta();
     }
     init();
-  }, [fetchHoldings, fetchCash, fetchPriceMeta]);
+  }, [fetchHoldings, fetchCash, fetchPriceMeta, fetchAssetHistory]);
 
   // --- 計算 ---
   const twHoldings = useMemo(() => holdings.filter(h => h.category === 'tw_stock'), [holdings]);
@@ -158,20 +168,39 @@ export default function AssetManager() {
   const totalAssetTWD = twStats.totalValue + usStats.totalValue * EX_RATE + totalCashInTWD;
   const totalAssetDisplay = displayCurrency === 'TWD' ? totalAssetTWD : totalAssetTWD / EX_RATE;
 
-  // --- 歷史水位：用真實資料產生今日快照點 ---
-  const todayLabel = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit' });
-  const chartData = useMemo(() => {
-    const twValueTWD = twStats.totalValue;           // 台股市值（TWD）
-    const usValueTWD = usStats.totalValue * EX_RATE; // 美股市值換算 TWD
+  // --- 每日快照：資料載入完成後自動存今日資產快照 ---
+  const snapshotSavedRef = React.useRef(false);
+  useEffect(() => {
+    if (loading || snapshotSavedRef.current) return;
+    if (holdings.length === 0 && cashEntries.length === 0) return;
+    snapshotSavedRef.current = true;
+
+    const twValueTWD = twStats.totalValue;
+    const usValueTWD = usStats.totalValue * EX_RATE;
     const cashValueTWD = cashTWD + cashUSD * EX_RATE;
     const totalTWD = twValueTWD + usValueTWD + cashValueTWD;
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
-    const point = displayCurrency === 'TWD'
-      ? { date: todayLabel, total: totalTWD }
-      : { date: todayLabel, total: totalTWD / EX_RATE };
+    fetch('/api/asset-history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        date: today,
+        twStockTWD: Math.round(twValueTWD),
+        usStockTWD: Math.round(usValueTWD),
+        cashTWD: Math.round(cashValueTWD),
+        totalTWD: Math.round(totalTWD),
+      }),
+    }).then(() => fetchAssetHistory()).catch(() => {});
+  }, [loading, holdings, cashEntries, twStats.totalValue, usStats.totalValue, cashTWD, cashUSD, fetchAssetHistory]);
 
-    return [point];
-  }, [twStats.totalValue, usStats.totalValue, cashTWD, cashUSD, displayCurrency, todayLabel]);
+  // --- 歷史水位圖表資料（依顯示幣別換算）---
+  const chartData = useMemo(() => {
+    return assetHistory.map(s => ({
+      date: s.date.slice(5), // MM-DD
+      total: displayCurrency === 'TWD' ? s.totalTWD : s.totalTWD / EX_RATE,
+    }));
+  }, [assetHistory, displayCurrency]);
 
   // --- 記錄交易 ---
   const logTransaction = async (txn: {

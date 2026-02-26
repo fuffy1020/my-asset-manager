@@ -5,7 +5,7 @@
     "category": "tw_stock",
     "shares": 20,
     "avgCost": 1057.5,
-    "currentPrice": 1260,
+    "currentPrice": 1435,
     "currency": "TWD"
   },
   {
@@ -14,16 +14,7 @@
     "category": "tw_stock",
     "shares": 200,
     "avgCost": 91.53,
-    "currentPrice": 98.5,
-    "currency": "TWD"
-  },
-  {
-    "ticker": "2383",
-    "name": "台光電",
-    "category": "tw_stock",
-    "shares": 5,
-    "avgCost": 2050,
-    "currentPrice": 2195,
+    "currentPrice": 108,
     "currency": "TWD"
   },
   {
@@ -32,7 +23,7 @@
     "category": "tw_stock",
     "shares": 30,
     "avgCost": 383,
-    "currentPrice": 369,
+    "currentPrice": 458.5,
     "currency": "TWD"
   },
   {
@@ -41,7 +32,7 @@
     "category": "tw_stock",
     "shares": 100,
     "avgCost": 237.5,
-    "currentPrice": 246,
+    "currentPrice": 338,
     "currency": "TWD"
   },
   {
@@ -50,25 +41,7 @@
     "category": "tw_stock",
     "shares": 50,
     "avgCost": 259.5,
-    "currentPrice": 265.5,
-    "currency": "TWD"
-  },
-  {
-    "ticker": "3324",
-    "name": "雙鴻",
-    "category": "tw_stock",
-    "shares": 10,
-    "avgCost": 1095,
-    "currentPrice": 1065,
-    "currency": "TWD"
-  },
-  {
-    "ticker": "5347",
-    "name": "世界",
-    "category": "tw_stock",
-    "shares": 200,
-    "avgCost": 138.5,
-    "currentPrice": 126,
+    "currentPrice": 325.5,
     "currency": "TWD"
   },
   {
@@ -77,7 +50,7 @@
     "category": "us_stock",
     "shares": 5,
     "avgCost": 370.846,
-    "currentPrice": 332.65,
+    "currentPrice": 332.31,
     "currency": "USD"
   },
   {
@@ -86,7 +59,7 @@
     "category": "us_stock",
     "shares": 2,
     "avgCost": 206.88,
-    "currentPrice": 248.18,
+    "currentPrice": 267.9,
     "currency": "USD"
   },
   {
@@ -95,7 +68,7 @@
     "category": "us_stock",
     "shares": 5,
     "avgCost": 122.826,
-    "currentPrice": 139.51,
+    "currentPrice": 160.43,
     "currency": "USD"
   },
   {
@@ -104,7 +77,7 @@
     "category": "us_stock",
     "shares": 3,
     "avgCost": 339.203,
-    "currentPrice": 667.77,
+    "currentPrice": 723.39,
     "currency": "USD"
   },
   {
@@ -113,7 +86,7 @@
     "category": "us_stock",
     "shares": 3,
     "avgCost": 411.4067,
-    "currentPrice": 428.17,
+    "currentPrice": 429,
     "currency": "USD"
   },
   {
@@ -122,7 +95,25 @@
     "category": "us_stock",
     "shares": 2,
     "avgCost": 187.405,
-    "currentPrice": 189.82,
+    "currentPrice": 195.56,
     "currency": "USD"
+  },
+  {
+    "ticker": "3030",
+    "name": "德律",
+    "category": "tw_stock",
+    "shares": 100,
+    "avgCost": 197.5,
+    "currentPrice": 203.5,
+    "currency": "TWD"
+  },
+  {
+    "ticker": "8046",
+    "name": "南電",
+    "category": "tw_stock",
+    "shares": 40,
+    "avgCost": 502,
+    "currentPrice": 553,
+    "currency": "TWD"
   }
 ]

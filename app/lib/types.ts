@@ -36,3 +36,11 @@ export interface Transaction {
   date: string;       // ISO string
   note?: string;
 }
+
+export interface AssetSnapshot {
+  date: string;        // YYYY-MM-DD
+  twStockTWD: number;  // 台股市值 (TWD)
+  usStockTWD: number;  // 美股市值 (換算 TWD)
+  cashTWD: number;     // 現金 (換算 TWD)
+  totalTWD: number;    // 總資產 (TWD)
+}
